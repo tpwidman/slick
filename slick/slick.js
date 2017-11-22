@@ -5,14 +5,12 @@
 \__ \ | | (__|   < _ | \__ \
 |___/_|_|\___|_|\_(_)/ |___/
                    |__/
-
  Version: 1.8.1
   Author: Ken Wheeler
  Website: http://kenwheeler.github.io
     Docs: http://kenwheeler.github.io/slick
     Repo: http://github.com/kenwheeler/slick
   Issues: http://github.com/kenwheeler/slick/issues
-
  */
 /* global window, document, define, jQuery, setInterval, clearInterval */
 ;(function(factory) {
@@ -50,6 +48,7 @@
                 autoplaySpeed: 3000,
                 centerMode: false,
                 centerPadding: '50px',
+				continuousSliding: false,
                 cssEase: 'ease',
                 customPaging: function(slider, i) {
                     return $('<button type="button" />').text(i + 1);
@@ -308,7 +307,6 @@
                 });
 
             } else {
-
                 _.applyTransition();
                 targetLeft = Math.ceil(targetLeft);
 
@@ -320,12 +318,24 @@
                 _.$slideTrack.css(animProps);
 
                 if (callback) {
-                    setTimeout(function() {
+					if(_.options.continuousSliding === true){
+						_.continuousWidth = $(_.$slides[_.currentSlide-1]).width()*10;
+						//console.log(_.continuousWidth);
+						setTimeout(function() {
 
-                        _.disableTransition();
+							_.disableTransition();
 
-                        callback.call();
-                    }, _.options.speed);
+							callback.call();
+						}, _.continuousWidth);	
+					}else {
+						console.log(_.continuousWidth);
+						setTimeout(function() {
+
+							_.disableTransition();
+
+							callback.call();
+						}, _.options.speed);
+					}
                 }
 
             }
@@ -363,14 +373,21 @@
 
     };
 
-    Slick.prototype.applyTransition = function(slide) {
+    Slick.prototype.applyTransition = function(slide, slideIndex) {
 
         var _ = this,
             transition = {};
 
         if (_.options.fade === false) {
+			if(_.options.continuousSliding === true) {
+			_.continuousWidth = $(_.$slides[_.currentSlide-1]).width()*10;
+			//console.log($(_.continuousWidth));
+			transition[_.transitionType] = _.transformType + ' ' + _.continuousWidth + 'ms ' + _.options.cssEase;
+			} else {
             transition[_.transitionType] = _.transformType + ' ' + _.options.speed + 'ms ' + _.options.cssEase;
-        } else {
+			}
+		} else {
+			console.log(_.options);
             transition[_.transitionType] = 'opacity ' + _.options.speed + 'ms ' + _.options.cssEase;
         }
 
@@ -387,8 +404,13 @@
         var _ = this;
 
         _.autoPlayClear();
-
-        if ( _.slideCount > _.options.slidesToShow ) {
+		
+		if(_.options.continuousSliding === true){
+			_.continuousWidth = $(_.$slides[_.currentSlide-1]).width()*5;
+			_.autoPlayTimer = setInterval( _.autoPlayIterator, _.options.autoplaySpeed);
+			//console.log(_.autoPlayTimer);
+		}
+		else if ( _.slideCount > _.options.slidesToShow ) {
             _.autoPlayTimer = setInterval( _.autoPlayIterator, _.options.autoplaySpeed );
         }
 
